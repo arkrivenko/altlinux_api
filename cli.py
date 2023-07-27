@@ -2,6 +2,7 @@ import argparse
 import json
 
 from api import AltLinuxAPI
+from comparison import Comparator
 
 
 def main():
@@ -12,16 +13,23 @@ def main():
     args = parser.parse_args()
 
     api = AltLinuxAPI()
+    comparator = Comparator()
 
     branch1 = args.branch1
     branch2 = args.branch2
 
     arch_list1 = api.get_all_pkgset_archs(branch1)
     arch_list2 = api.get_all_pkgset_archs(branch2)
+    archs = comparator.compare_archs(arch_list1, arch_list2)
+
+    result = {}
+    for arch in archs:
+        packages1 = api.export_branch_binary_packages(f'{branch1}?arch={arch}')
+        packages2 = api.export_branch_binary_packages(f'{branch2}?arch={arch}')
+        comparison_result = comparator.compare_packages(packages1, packages2)
+        result[arch] = comparison_result
 
     file_name = args.output
-
-    result = 'some result data'
 
     if file_name:
         if file_name.endswith('.json'):
